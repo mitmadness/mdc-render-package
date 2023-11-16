@@ -1,1 +1,1 @@
-blender -b render-scene-interior.blend --python-text import.py -f 1
+blender -b render-scene-interior.blend --python render-scene-import.py -o //Result#### -x 1 -f 1

@@ -5,7 +5,7 @@ This allows us to find this material easily to append that blend file to the sce
 
 import bpy
 
-material = bpy.data.materials[0];
+material = bpy.data.materials[0]
 
 material.name = "__render_importMaterial"
 
