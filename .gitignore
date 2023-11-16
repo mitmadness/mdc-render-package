@@ -1,0 +1,13 @@
+# Temporary blender files
+*.blend1
+
+# HDR files
+*.exr
+*.hdr
+
+# Imported assets and scene
+assets/
+myDecoCloud_scene/
+
+# Result of the render
+Result0001.png
