@@ -7,7 +7,10 @@ import bpy
 import idprop.types
 import re
 import sys
+import time
 from os import path
+
+startTime = time.time()
 
 ## Import the GLTF scene exported from mDC Designer
 
@@ -119,17 +122,23 @@ def importMaterialRenderAsset(objects, matName, renderAssetRef):
         with bpy.context.temp_override(selected_objects=[dummy]):
             bpy.ops.object.delete()
 
+importedObjectsCount = 0
+importedMaterialsCount = 0
+
 for obj in bpy.context.scene.objects:
     if 'assetBundleHash' in obj:
         importObjectRenderAsset(obj, obj)
+        importedObjectsCount += 1
 
     if 'materialsMap' in obj and isinstance(obj['materialsMap'], idprop.types.IDPropertyGroup):
         for (materialName, renderAssetRef) in obj['materialsMap'].items():
             importMaterialRenderAsset([obj, *obj.children_recursive], materialName, renderAssetRef)
+            importedMaterialsCount += 1
 
 for mat in bpy.data.materials:
     if 'assetBundleHash' in mat:
         importMaterialRenderAsset(bpy.context.scene.objects, mat.name, mat)
+        importedMaterialsCount += 1
 
 
 ## Replace windows glass materials
@@ -144,3 +153,7 @@ for obj in bpy.context.scene.objects:
             print(f'Replace {slot.material.name} material in {obj.name} to {windowsGlassMaterial.name}')
             
             slot.material = windowsGlassMaterial
+
+print(f'--- render-scene-import.py execution time: {time.time() - startTime} seconds ---')
+print(f'importedObjectsCount: {importedObjectsCount}')
+print(f'importedMaterialsCount: {importedMaterialsCount}')
