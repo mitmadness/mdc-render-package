@@ -14,7 +14,9 @@ if len(meshes) > 1:
 
 # Find the joined mesh and move it to root        
 joinedMesh = next(filter(lambda obj: obj.type == 'MESH', bpy.data.objects))
-joinedMesh.parent = None
+
+with bpy.context.temp_override(active_object=joinedMesh, selected_objects=[joinedMesh]):
+    bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
 
 # Delete all non-meshes objects
 nonMeshes = list(filter(lambda obj: obj.type != 'MESH', bpy.data.objects))

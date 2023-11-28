@@ -27,6 +27,8 @@ bpy.context.scene.camera = bpy.data.objects["__render_camera"]
 ## Import and place assets, potentially their high quality versions stored in .blend files
 
 assetsPath = path.join(path.dirname(bpy.data.filepath), 'assets')
+importedObjects = {}
+importedObjectsLocalMatrixes = {}
 importedMaterials = {}
 
 def importObjectRenderAsset(obj, renderAssetRef):
@@ -34,36 +36,54 @@ def importObjectRenderAsset(obj, renderAssetRef):
 
     renderAssetFileName = renderAssetRef["assetBundleHash"]
 
-    ## Import the .blend or .gltf scene
-    blendFilePath = path.join(assetsPath, renderAssetFileName, f'{renderAssetFileName}.blend')
-    gltfFilePath = path.join(assetsPath, renderAssetFileName, f'{renderAssetFileName}.gltf')
+    ## Use a simple dict cache to see if we already imported this object
+    if renderAssetFileName in importedObjects:
+        cachedObject = importedObjects[renderAssetFileName]
 
-    if path.exists(blendFilePath):
-        print(f'Import .blend {blendFilePath}')
+        # Duplicate it
+        with bpy.context.temp_override(selected_objects=[cachedObject]):
+            bpy.ops.object.duplicate(linked=True)
+
+            importedObject = bpy.context.selected_objects[0]
+
+    else:
+        ## Import the HQ or LQ .blend scene
+        hqFilePath = path.join(assetsPath, renderAssetFileName, f'{renderAssetFileName}-hq.blend')
+        lqFilePath = path.join(assetsPath, renderAssetFileName, f'{renderAssetFileName}.blend')
+
+        if path.exists(hqFilePath):
+            print(f'Import HQ file {hqFilePath}')
+            importedFilePath = hqFilePath
+
+        elif path.exists(lqFilePath):
+            print(f'Import LQ file {lqFilePath}')
+            importedFilePath = lqFilePath
+
+        else:
+            print(f'Did not find file to import for {renderAssetFileName}', file=sys.stderr)
+            return
 
         objectName = '__render_importObject'
 
         bpy.ops.wm.append(
-            filepath=path.join(blendFilePath, 'Object', objectName),
-            directory=path.join(blendFilePath, 'Object'),
+            filepath=path.join(importedFilePath, 'Object', objectName),
+            directory=path.join(importedFilePath, 'Object'),
             filename=objectName)
 
-    elif path.exists(gltfFilePath):
-        print(f'Import GLTF {gltfFilePath}')
-
-        bpy.ops.import_scene.gltf(filepath=gltfFilePath)
-
-    else:
-        print(f'Did not find .blend or .gltf file for {renderAssetFileName}', file=sys.stderr)
-        return
+        ## Get the imported object and change its name
+        importedObject = bpy.data.objects['__render_importObject']
         
-    ## Get the imported object and change its name
-    importedObject = bpy.data.objects['__render_importObject']
+        importedObject.name += '-' + renderAssetFileName
 
-    importedObject.name += '-' + renderAssetFileName
+        ## Cache it
+        importedObjects[renderAssetFileName] = importedObject
+
+        ## Store its original matrix values to be able to move it and its duplicate correctly
+        importedObjectsLocalMatrixes[renderAssetFileName] = importedObject.matrix_local.copy()
     
-    ## Set the imported object parent (and move it there)
-    importedObject.parent = obj
+    ## Move the imported object where the null is
+    ## Don't set its parent, because it takes a long time
+    importedObject.matrix_world = obj.matrix_world @ importedObjectsLocalMatrixes[renderAssetFileName]
 
 def importMaterialRenderAsset(objects, matName, renderAssetRef):
     print(f'Import material {matName} RenderAsset')
@@ -75,29 +95,28 @@ def importMaterialRenderAsset(objects, matName, renderAssetRef):
         importedMaterial = importedMaterials[renderAssetFileName]
     
     else:
-        ## Import the .blend or .gltf scene
-        blendFilePath = path.join(assetsPath, renderAssetFileName, f'{renderAssetFileName}.blend')
-        gltfFilePath = path.join(assetsPath, renderAssetFileName, f'{renderAssetFileName}.gltf')
+        ## Import the HQ or LQ .blend scene
+        hqFilePath = path.join(assetsPath, renderAssetFileName, f'{renderAssetFileName}-hq.blend')
+        lqFilePath = path.join(assetsPath, renderAssetFileName, f'{renderAssetFileName}.blend')
 
-        if path.exists(blendFilePath):
-            print(f'Import .blend {blendFilePath}')
+        if path.exists(hqFilePath):
+            print(f'Import HQ file {hqFilePath}')
+            importedFilePath = hqFilePath
 
-            materialName = '__render_importMaterial'
-
-            bpy.ops.wm.append(
-                filepath=path.join(blendFilePath, 'Material', materialName),
-                directory=path.join(blendFilePath, 'Material'),
-                filename=materialName)
-
-        elif path.exists(gltfFilePath):
-            print(f'Import GLTF {gltfFilePath}')
-
-            bpy.ops.import_scene.gltf(filepath=gltfFilePath)
+        elif path.exists(lqFilePath):
+            print(f'Import LQ file {lqFilePath}')
+            importedFilePath = lqFilePath
 
         else:
-            print(f'Did not find .blend or .gltf file for {renderAssetFileName}', file=sys.stderr)
+            print(f'Did not find file to import for {renderAssetFileName}', file=sys.stderr)
             return
 
+        materialName = '__render_importMaterial'
+
+        bpy.ops.wm.append(
+            filepath=path.join(importedFilePath, 'Material', materialName),
+            directory=path.join(importedFilePath, 'Material'),
+            filename=materialName)
         
         ## Get the imported object and change its name
         importedMaterial = bpy.data.materials['__render_importMaterial']
@@ -107,7 +126,7 @@ def importMaterialRenderAsset(objects, matName, renderAssetRef):
         ## Cache it
         importedMaterials[renderAssetFileName] = importedMaterial
 
-    ## Replace the material in all slots of meshes
+    # Replace the material in all slots of meshes
     for obj in objects:
         if obj.type != 'MESH': continue
     
