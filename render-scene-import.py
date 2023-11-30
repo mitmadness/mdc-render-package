@@ -85,6 +85,9 @@ def importObjectRenderAsset(obj, renderAssetRef):
     ## Don't set its parent, because it takes a long time
     importedObject.matrix_world = obj.matrix_world @ importedObjectsLocalMatrixes[renderAssetFileName]
 
+    ## Return the importedObject so that it can be used for material map
+    return importedObject
+
 def importMaterialRenderAsset(objects, matName, renderAssetRef):
     print(f'Import material {matName} RenderAsset')
     
@@ -145,13 +148,18 @@ importedObjectsCount = 0
 importedMaterialsCount = 0
 
 for obj in bpy.context.scene.objects:
+    importedObject = None
+
     if 'assetBundleHash' in obj:
-        importObjectRenderAsset(obj, obj)
+        importedObject = importObjectRenderAsset(obj, obj)
         importedObjectsCount += 1
 
     if 'materialsMap' in obj and isinstance(obj['materialsMap'], idprop.types.IDPropertyGroup):
+        appliedObject = importedObject or obj
+        appliedObjects = [appliedObject, *appliedObject.children_recursive]
+
         for (materialName, renderAssetRef) in obj['materialsMap'].items():
-            importMaterialRenderAsset([obj, *obj.children_recursive], materialName, renderAssetRef)
+            importMaterialRenderAsset(appliedObjects, materialName, renderAssetRef)
             importedMaterialsCount += 1
 
 for mat in bpy.data.materials:
