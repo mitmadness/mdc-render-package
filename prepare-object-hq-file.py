@@ -17,7 +17,7 @@ joinedMesh = next(filter(lambda obj: obj.type == 'MESH', bpy.data.objects))
 
 with bpy.context.temp_override(active_object=joinedMesh, selected_objects=[joinedMesh]):
     bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
-    bpy.ops.object.transforms_to_deltas(mode='ALL')
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
 
 # Delete all non-meshes objects
 nonMeshes = list(filter(lambda obj: obj.type != 'MESH', bpy.data.objects))
