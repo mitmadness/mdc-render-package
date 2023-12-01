@@ -28,7 +28,7 @@ bpy.context.scene.camera = bpy.data.objects["__render_camera"]
 
 assetsPath = path.join(path.dirname(bpy.data.filepath), 'assets')
 importedObjects = {}
-importedObjectsLocalMatrixes = {}
+importedObjectsWorldMatrixes = {}
 importedMaterials = {}
 
 def importObjectRenderAsset(obj, renderAssetRef):
@@ -79,11 +79,11 @@ def importObjectRenderAsset(obj, renderAssetRef):
         importedObjects[renderAssetFileName] = importedObject
 
         ## Store its original matrix values to be able to move it and its duplicate correctly
-        importedObjectsLocalMatrixes[renderAssetFileName] = importedObject.matrix_local.copy()
+        importedObjectsWorldMatrixes[renderAssetFileName] = importedObject.matrix_world.copy()
     
     ## Move the imported object where the null is
     ## Don't set its parent, because it takes a long time
-    importedObject.matrix_world = obj.matrix_world @ importedObjectsLocalMatrixes[renderAssetFileName]
+    importedObject.matrix_world = obj.matrix_world @ importedObjectsWorldMatrixes[renderAssetFileName]
 
     ## Return the importedObject so that it can be used for material map
     return importedObject

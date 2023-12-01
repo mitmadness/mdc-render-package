@@ -12,11 +12,12 @@ if len(meshes) > 1:
     with bpy.context.temp_override(active_object=meshes[0], selected_editable_objects=meshes):
         bpy.ops.object.join()
 
-# Find the joined mesh and move it to root        
+# Find the joined mesh, move it to root, and apply the transform
 joinedMesh = next(filter(lambda obj: obj.type == 'MESH', bpy.data.objects))
 
 with bpy.context.temp_override(active_object=joinedMesh, selected_objects=[joinedMesh]):
     bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
 
 # Delete all non-meshes objects
 nonMeshes = list(filter(lambda obj: obj.type != 'MESH', bpy.data.objects))
