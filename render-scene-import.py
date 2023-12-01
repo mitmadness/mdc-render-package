@@ -41,10 +41,9 @@ def importObjectRenderAsset(obj, renderAssetRef):
         cachedObject = importedObjects[renderAssetFileName]
 
         # Duplicate it
-        with bpy.context.temp_override(selected_objects=[cachedObject]):
-            bpy.ops.object.duplicate(linked=False)
-
-            importedObject = bpy.context.selected_objects[0]
+        importedObject = cachedObject.copy()
+        importedObject.data = cachedObject.data.copy()
+        bpy.context.collection.objects.link(importedObject)
 
     else:
         ## Import the HQ or LQ .blend scene
@@ -141,8 +140,7 @@ def importMaterialRenderAsset(objects, matName, renderAssetRef):
     dummy = bpy.data.objects.get('__render_dummy')
 
     if dummy is not None:
-        with bpy.context.temp_override(selected_objects=[dummy]):
-            bpy.ops.object.delete()
+        bpy.data.objects.remove(dummy, do_unlink=True)
 
 importedObjectsCount = 0
 importedMaterialsCount = 0
