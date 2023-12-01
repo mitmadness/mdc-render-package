@@ -19,11 +19,6 @@ sceneFilePath = path.join(path.dirname(bpy.data.filepath), 'myDecoCloud_scene', 
 bpy.ops.import_scene.gltf(filepath=sceneFilePath)
 
 
-## Set the active camera
-
-bpy.context.scene.camera = bpy.data.objects["__render_camera"]
-
-
 ## Import and place assets, potentially their high quality versions stored in .blend files
 
 assetsPath = path.join(path.dirname(bpy.data.filepath), 'assets')
@@ -181,6 +176,12 @@ for obj in bpy.context.scene.objects:
             print(f'Replace {slot.material.name} material in {obj.name} to {windowsGlassMaterial.name}')
             
             slot.material = windowsGlassMaterial
+
+
+## Set the active camera
+
+bpy.context.scene.camera = bpy.data.objects["__render_camera"]
+
 
 print(f'--- render-scene-import.py execution time: {time.time() - startTime} seconds ---')
 print(f'importedObjectsCount: {importedObjectsCount}')
