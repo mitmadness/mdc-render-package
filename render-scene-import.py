@@ -74,8 +74,11 @@ def importObjectRenderAsset(obj, renderAssetRef):
         
         importedObject.name += '-' + renderAssetFileName
 
-        ## Cache it
-        importedObjects[renderAssetFileName] = importedObject
+        ## Cache a copy of it. We can't cache it directly because if we swap materials on it,
+        ## duplicates of it will not be able to swap material
+        importedObjectCopy = importedObject.copy()
+        importedObjectCopy.data = importedObject.data.copy()
+        importedObjects[renderAssetFileName] = importedObjectCopy
 
         ## Store its original matrix values to be able to move it and its duplicate correctly
         importedObjectsWorldMatrixes[renderAssetFileName] = importedObject.matrix_world.copy()
