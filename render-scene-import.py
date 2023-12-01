@@ -42,7 +42,7 @@ def importObjectRenderAsset(obj, renderAssetRef):
 
         # Duplicate it
         with bpy.context.temp_override(selected_objects=[cachedObject]):
-            bpy.ops.object.duplicate(linked=True)
+            bpy.ops.object.duplicate(linked=False)
 
             importedObject = bpy.context.selected_objects[0]
 
