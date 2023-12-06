@@ -5,12 +5,18 @@ Imports the scene and sets everything as needed for the render
 
 import bpy
 import idprop.types
+import math
+import mathutils
 import re
 import sys
 import time
 from os import path
 
 startTime = time.time()
+
+argv = sys.argv
+sceneEnvironment = argv[argv.index('--scene-environment') + 1]
+isInterior = sceneEnvironment == 'interior'
 
 ## Import the GLTF scene exported from mDC Designer
 
@@ -176,6 +182,50 @@ for obj in bpy.context.scene.objects:
             print(f'Replace {slot.material.name} material in {obj.name} to {windowsGlassMaterial.name}')
             
             slot.material = windowsGlassMaterial
+
+
+## Add light areas / portals to all openings
+
+for obj in bpy.context.scene.objects:
+    if 'opening' in obj and isinstance(obj['opening'], idprop.types.IDPropertyArray):
+        print(f'Add area light to opening {obj.name}')
+        
+        (openingSizeX, openingSizeY, openingSizeZ) = obj['opening'].to_list()
+        
+        lightData = bpy.data.lights.new(name='Area Light Data', type='AREA')
+
+        energyBase = 15 if isInterior else 2.5 # W / m^2
+        lightData.energy = energyBase * openingSizeX * openingSizeY
+        
+        lightData.shape = 'RECTANGLE'
+        lightData.size = openingSizeX * 0.95
+        lightData.size_y = openingSizeY * 0.95
+        lightData.color = (1.00017, 0.947265, 0.846812) # FFF9ED, color of the sun in our current HDRI
+
+        light = bpy.data.objects.new(name='Area Light', object_data=lightData)
+        light.visible_camera = False
+        light.visible_glossy = False
+        light.visible_transmission = False
+        light.visible_volume_scatter = False
+
+        # We need to apply a rotation to the light so that it is oriented the same way the openings nulls (obj) are
+        fixRotationMatrix = mathutils.Euler((math.radians(-90), math.radians(180), math.radians(90))).to_matrix().to_4x4()
+
+        # And we need to translate the light so that it is in the center of the opening (the null is at the bottom left of it)
+        moveToCenterMatrix = mathutils.Matrix.Translation((openingSizeX / 2, openingSizeY / 2, -openingSizeZ / 2))
+        
+        light.matrix_world = obj.matrix_world @ fixRotationMatrix @ moveToCenterMatrix
+
+        bpy.context.collection.objects.link(light)
+        
+        ## Add the light portal, only in interior
+        if isInterior:
+            portal = light.copy()
+            portal.data = lightData.copy()
+            portal.data.cycles.is_portal = True
+            portal.name = 'Area Light Portal'
+
+            bpy.context.collection.objects.link(portal)
 
 
 ## Set the active camera

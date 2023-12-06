@@ -1,10 +1,10 @@
 @echo off
 
 if %1% == render-interior (
-    blender -b render-scene-interior.blend --python render-scene-import.py -o //Result#### -x 1 -f 1 -- --cycles-device OPTIX
+    blender -b render-scene-interior.blend --python render-scene-import.py -o //Result#### -x 1 -f 1 -- --cycles-device OPTIX --scene-environment interior
 )
 if %1% == render-exterior (
-    blender -b render-scene-exterior.blend --python render-scene-import.py -o //Result#### -x 1 -f 1 -- --cycles-device OPTIX
+    blender -b render-scene-exterior.blend --python render-scene-import.py -o //Result#### -x 1 -f 1 -- --cycles-device OPTIX --scene-environment exterior
 )
 if %1% == prepare-material-hq-file (
     blender -b %2% --python prepare-material-hq-file.py
