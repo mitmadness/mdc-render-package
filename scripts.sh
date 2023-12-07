@@ -1,9 +1,9 @@
 case $1 in
     "render-interior")
-        blender -b render-scene-interior.blend --python render-scene-import.py -o //Result#### -x 1 -f 1 -- --cycles-device OPTIX
+        blender -b render-scene-interior.blend --python render-scene-import.py -o //Result#### -x 1 -f 1 -- --cycles-device OPTIX --scene-environment interior
         ;;
     "render-exterior")
-        blender -b render-scene-exterior.blend --python render-scene-import.py -o //Result#### -x 1 -f 1 -- --cycles-device OPTIX
+        blender -b render-scene-exterior.blend --python render-scene-import.py -o //Result#### -x 1 -f 1 -- --cycles-device OPTIX --scene-environment exterior
         ;;
     "prepare-material-hq-file")
         blender -b $2 --python prepare-material-hq-file.py
