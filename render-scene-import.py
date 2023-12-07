@@ -233,6 +233,13 @@ for obj in bpy.context.scene.objects:
             bpy.context.collection.objects.link(portal)
 
 
+## Apply a little bit of sheen on all materials
+
+for mat in bpy.data.materials:
+    if "Principled BSDF" in mat.node_tree.nodes and mat.node_tree.nodes["Principled BSDF"].inputs[23].default_value == 0 :
+        mat.node_tree.nodes["Principled BSDF"].inputs[23].default_value = 0.02
+
+
 ## Set the active camera
 
 bpy.context.scene.camera = bpy.data.objects["__render_camera"]
