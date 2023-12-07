@@ -244,6 +244,18 @@ for mat in bpy.data.materials:
         mat.node_tree.nodes["Principled BSDF"].inputs[23].default_value = 0.02
 
 
+## Rotate the HDRI to have similar sun rotation (and similar shadows) as exported scene
+
+if "__render_sun" in bpy.data.objects:
+    sun = bpy.data.objects["__render_sun"]
+    sun.data.energy = 0
+
+    sceneSunRotation = sun.matrix_world.decompose()[1].to_euler().z
+    hdrMapSunRotation = 0.86924
+
+    bpy.data.worlds["World"].node_tree.nodes["Mapping"].inputs[2].default_value[2] =  hdrMapSunRotation - sceneSunRotation
+
+
 ## Set the active camera
 
 bpy.context.scene.camera = bpy.data.objects["__render_camera"]
