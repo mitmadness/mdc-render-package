@@ -236,7 +236,11 @@ for obj in bpy.context.scene.objects:
 ## Apply a little bit of sheen on all materials
 
 for mat in bpy.data.materials:
-    if "Principled BSDF" in mat.node_tree.nodes and mat.node_tree.nodes["Principled BSDF"].inputs[23].default_value == 0 :
+    if (
+        mat.node_tree is not None
+        and "Principled BSDF" in mat.node_tree.nodes
+        and mat.node_tree.nodes["Principled BSDF"].inputs[23].default_value == 0
+    ):
         mat.node_tree.nodes["Principled BSDF"].inputs[23].default_value = 0.02
 
 
