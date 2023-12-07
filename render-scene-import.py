@@ -88,6 +88,11 @@ def importObjectRenderAsset(obj, renderAssetRef):
     ## Don't set its parent, because it takes a long time
     importedObject.matrix_world = obj.matrix_world @ importedObjectsWorldMatrixes[renderAssetFileName]
 
+    ## Apply the weights of the blendshape
+    if 'weights' in obj and isinstance(obj['weights'], idprop.types.IDPropertyArray):
+        for weightIndex, weight in enumerate(obj['weights']):
+            importedObject.data.shape_keys.key_blocks[weightIndex + 1].value = weight
+
     ## Return the importedObject so that it can be used for material map
     return importedObject
 
