@@ -214,7 +214,10 @@ for obj in bpy.context.scene.objects:
         light.visible_volume_scatter = False
 
         # We need to apply a rotation to the light so that it is oriented the same way the openings nulls (obj) are
-        fixRotationMatrix = mathutils.Euler((math.radians(-90), math.radians(180), math.radians(90))).to_matrix().to_4x4()
+        fixRotationMatrix = mathutils.Matrix.LocRotScale(
+            None,
+            mathutils.Euler((math.radians(90), math.radians(180), math.radians(-90))),
+            mathutils.Vector((1, -1, 1)))
 
         # And we need to translate the light so that it is in the center of the opening (the null is at the bottom left of it)
         moveToCenterMatrix = mathutils.Matrix.Translation((openingSizeX / 2, openingSizeY / 2, -openingSizeZ / 2))
