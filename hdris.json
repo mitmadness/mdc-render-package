@@ -1,0 +1,27 @@
+[
+    {
+        "verticalAngle": 20.0,
+        "path": "//hdris/Render-20.0.hdr",
+        "energyFactor": 100
+    },
+    {
+        "verticalAngle": 37.0,
+        "path": "//hdris/Render-37.0.hdr",
+        "energyFactor": 92.7
+    },
+    {
+        "verticalAngle": 54.0,
+        "path": "//hdris/Render-54.0.hdr",
+        "energyFactor": 69.5
+    },
+    {
+        "verticalAngle": 71.0,
+        "path": "//hdris/Render-71.0.hdr",
+        "energyFactor": 53.7
+    },
+    {
+        "verticalAngle": 88.0,
+        "path": "//hdris/Render-88.0.hdr",
+        "energyFactor": 9.8
+    }
+]

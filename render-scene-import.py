@@ -4,7 +4,9 @@ Imports the scene and sets everything as needed for the render
 """
 
 import bpy
+import functools
 import idprop.types
+import json
 import math
 import mathutils
 import re
@@ -189,6 +191,51 @@ for obj in bpy.context.scene.objects:
             slot.material = windowsGlassMaterial
 
 
+## Apply a little bit of sheen on all materials
+
+for mat in bpy.data.materials:
+    if (
+        mat.node_tree is not None
+        and "Principled BSDF" in mat.node_tree.nodes
+        and mat.node_tree.nodes["Principled BSDF"].inputs[23].default_value == 0
+    ):
+        mat.node_tree.nodes["Principled BSDF"].inputs[23].default_value = 0.02
+
+
+## Adapt the HDRI to have similar sun rotation (and similar shadows) as exported scene
+if "__render_sun" in bpy.data.objects:
+    sun = bpy.data.objects["__render_sun"]
+    sun.data.energy = 0
+
+    ## Choose the HDRI closest to the vertical angle of the sun
+    sceneSunVerticalAngleDegrees = math.degrees(sun.matrix_world.decompose()[1].to_euler().x)
+
+    hdrisJsonPath = path.join(path.dirname(bpy.data.filepath), 'hdris.json')
+
+    with open(hdrisJsonPath) as hdrisJsonFile:
+        hdris = json.load(hdrisJsonFile)
+
+        def closestReducer(acc, cur):
+            if acc is None:
+                return cur
+            
+            if abs(acc["verticalAngle"] - sceneSunVerticalAngleDegrees) < abs(cur["verticalAngle"] - sceneSunVerticalAngleDegrees):
+                return acc
+            
+            return cur
+
+        closestHdri = functools.reduce(closestReducer, hdris)
+
+    bpy.data.worlds['World'].node_tree.nodes["Environment Texture"].image = bpy.data.images.load(closestHdri["path"])
+    hdriEnergyFactor = closestHdri["energyFactor"]
+
+    ## Rotate horizontaly the HDRI accordingly to the sun
+    sceneSunHorizontalAngle = sun.matrix_world.decompose()[1].to_euler().z
+    hdrMapSunHorizontalAngle = math.radians(90)
+
+    bpy.data.worlds["World"].node_tree.nodes["Mapping"].inputs[2].default_value[2] = hdrMapSunHorizontalAngle - sceneSunHorizontalAngle
+
+
 ## Add light areas / portals to all openings
 
 for obj in bpy.context.scene.objects:
@@ -200,7 +247,7 @@ for obj in bpy.context.scene.objects:
         lightData = bpy.data.lights.new(name='Area Light Data', type='AREA')
 
         energyBase = 15 if isInterior else 2.5 # W / m^2
-        lightData.energy = energyBase * openingSizeX * openingSizeY
+        lightData.energy = energyBase * openingSizeX * openingSizeY * (1 if hdriEnergyFactor is None else hdriEnergyFactor)
         
         lightData.shape = 'RECTANGLE'
         lightData.size = openingSizeX * 0.95
@@ -234,29 +281,6 @@ for obj in bpy.context.scene.objects:
             portal.name = 'Area Light Portal'
 
             bpy.context.collection.objects.link(portal)
-
-
-## Apply a little bit of sheen on all materials
-
-for mat in bpy.data.materials:
-    if (
-        mat.node_tree is not None
-        and "Principled BSDF" in mat.node_tree.nodes
-        and mat.node_tree.nodes["Principled BSDF"].inputs[23].default_value == 0
-    ):
-        mat.node_tree.nodes["Principled BSDF"].inputs[23].default_value = 0.02
-
-
-## Rotate the HDRI to have similar sun rotation (and similar shadows) as exported scene
-
-if "__render_sun" in bpy.data.objects:
-    sun = bpy.data.objects["__render_sun"]
-    sun.data.energy = 0
-
-    sceneSunRotation = sun.matrix_world.decompose()[1].to_euler().z
-    hdrMapSunRotation = 0.86924
-
-    bpy.data.worlds["World"].node_tree.nodes["Mapping"].inputs[2].default_value[2] =  hdrMapSunRotation - sceneSunRotation
 
 
 ## Set the active camera
