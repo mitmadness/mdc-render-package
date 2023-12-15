@@ -2,26 +2,101 @@
     {
         "verticalAngle": 20.0,
         "path": "//hdris/Render-20.0.hdr",
-        "energyFactor": 100
+        "energyFactor": 1
     },
     {
-        "verticalAngle": 37.0,
-        "path": "//hdris/Render-37.0.hdr",
-        "energyFactor": 92.7
+        "verticalAngle": 23.6,
+        "path": "//hdris/Render-23.6.hdr",
+        "energyFactor": 0.9804
     },
     {
-        "verticalAngle": 54.0,
-        "path": "//hdris/Render-54.0.hdr",
-        "energyFactor": 69.5
+        "verticalAngle": 27.2,
+        "path": "//hdris/Render-27.2.hdr",
+        "energyFactor": 0.9588
     },
     {
-        "verticalAngle": 71.0,
-        "path": "//hdris/Render-71.0.hdr",
-        "energyFactor": 53.7
+        "verticalAngle": 30.7,
+        "path": "//hdris/Render-30.7.hdr",
+        "energyFactor": 0.9362
+    },
+    {
+        "verticalAngle": 34.3,
+        "path": "//hdris/Render-34.3.hdr",
+        "energyFactor": 0.9124
+    },
+    {
+        "verticalAngle": 37.9,
+        "path": "//hdris/Render-37.9.hdr",
+        "energyFactor": 0.8874
+    },
+    {
+        "verticalAngle": 41.5,
+        "path": "//hdris/Render-41.5.hdr",
+        "energyFactor": 0.8609
+    },
+    {
+        "verticalAngle": 45.1,
+        "path": "//hdris/Render-45.1.hdr",
+        "energyFactor": 0.8328
+    },
+    {
+        "verticalAngle": 48.6,
+        "path": "//hdris/Render-48.6.hdr",
+        "energyFactor": 0.8026
+    },
+    {
+        "verticalAngle": 52.2,
+        "path": "//hdris/Render-52.2.hdr",
+        "energyFactor": 0.7707
+    },
+    {
+        "verticalAngle": 55.8,
+        "path": "//hdris/Render-55.8.hdr",
+        "energyFactor": 0.7366
+    },
+    {
+        "verticalAngle": 59.4,
+        "path": "//hdris/Render-59.4.hdr",
+        "energyFactor": 0.6997
+    },
+    {
+        "verticalAngle": 62.9,
+        "path": "//hdris/Render-62.9.hdr",
+        "energyFactor": 0.6595
+    },
+    {
+        "verticalAngle": 66.5,
+        "path": "//hdris/Render-66.5.hdr",
+        "energyFactor": 0.6149
+    },
+    {
+        "verticalAngle": 70.1,
+        "path": "//hdris/Render-70.1.hdr",
+        "energyFactor": 0.5660
+    },
+    {
+        "verticalAngle": 73.7,
+        "path": "//hdris/Render-73.7.hdr",
+        "energyFactor": 0.5107
+    },
+    {
+        "verticalAngle": 77.3,
+        "path": "//hdris/Render-77.3.hdr",
+        "energyFactor": 0.4465
+    },
+    {
+        "verticalAngle": 80.8,
+        "path": "//hdris/Render-80.8.hdr",
+        "energyFactor": 0.3685
+    },
+    {
+        "verticalAngle": 84.4,
+        "path": "//hdris/Render-84.4.hdr",
+        "energyFactor": 0.2668
     },
     {
         "verticalAngle": 88.0,
         "path": "//hdris/Render-88.0.hdr",
-        "energyFactor": 9.8
+        "energyFactor": 0.1239
     }
 ]
