@@ -96,6 +96,19 @@ def importObjectRenderAsset(obj, renderAssetRef):
     ## Return the importedObject so that it can be used for material map
     return importedObject
 
+
+def applyColorMaterial(objects, matName, colorToApply):
+    print(f'Apply color to {matName}')
+
+    for obj in objects:
+        if obj.type != 'MESH': continue
+
+        for slot in obj.material_slots:
+            if re.search(f'^{re.escape(matName)}(\.\d+)?$', slot.material.name) is not None:
+                principled = slot.material.node_tree.nodes['Principled BSDF']
+                principled.inputs['Base Color'].default_value = (colorToApply['r'],colorToApply['g'], colorToApply['b'], colorToApply['a'])
+
+
 def importMaterialRenderAsset(objects, matName, renderAssetRef):
     print(f'Import material {matName} RenderAsset')
     
@@ -153,6 +166,7 @@ def importMaterialRenderAsset(objects, matName, renderAssetRef):
 
 importedObjectsCount = 0
 importedMaterialsCount = 0
+importedColorsCount = 0
 
 for obj in bpy.context.scene.objects:
     importedObject = None
@@ -161,13 +175,21 @@ for obj in bpy.context.scene.objects:
         importedObject = importObjectRenderAsset(obj, obj)
         importedObjectsCount += 1
 
-    if 'materialsMap' in obj and isinstance(obj['materialsMap'], idprop.types.IDPropertyGroup):
+    if 'materialsMap' in obj and isinstance(obj['materialsMap'], idprop.types.IDPropertyGroup)\
+            or 'palettesMap' in obj and isinstance(obj['palettesMap'], idprop.types.IDPropertyGroup):
+
         appliedObject = importedObject or obj
         appliedObjects = [appliedObject, *appliedObject.children_recursive]
 
         for (materialName, renderAssetRef) in obj['materialsMap'].items():
             importMaterialRenderAsset(appliedObjects, materialName, renderAssetRef)
             importedMaterialsCount += 1
+
+        if 'palettesMap' in obj:
+            for (materialName, color) in obj['palettesMap'].items():
+                applyColorMaterial(appliedObjects, materialName, color)
+                importedColorsCount += 1
+
 
 for mat in bpy.data.materials:
     if 'assetBundleHash' in mat:
@@ -267,3 +289,4 @@ bpy.context.scene.camera = bpy.data.objects["__render_camera"]
 print(f'--- render-scene-import.py execution time: {time.time() - startTime} seconds ---')
 print(f'importedObjectsCount: {importedObjectsCount}')
 print(f'importedMaterialsCount: {importedMaterialsCount}')
+print(f'importedColorsCount: {importedColorsCount}')
