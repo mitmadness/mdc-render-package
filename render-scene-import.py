@@ -97,16 +97,68 @@ def importObjectRenderAsset(obj, renderAssetRef):
     return importedObject
 
 
-def applyColorMaterial(objects, matName, colorToApply):
+# Fonction de processing des matériaux.
+
+# Cette méthode sert à appliquer une palette, on est obligé de filer la materialMap car si c'était un matériaux
+# customisable, il s'est fait importer la face dans un nom qui n'a plus rien à voir avec son nom original
+# du coup on doit pouvoir accéder au hash du bundle pour pouvoir retrouver le matériaux et le dupliquer.
+def applyColorMaterial(objects, matName, colorToApply, materialsMap):
     print(f'Apply color to {matName}')
 
+    # on commence par regarder si le matériau cible de la palette n'est pas déjà customiser
+    # par un autre matéfiau, et dans ce cas
+    full_name = "NOT IMPORTED"
+
+    print("Trying to get " + matName)
+    for (localName, localRenderAsset) in materialsMap.items():
+        if localName == matName:
+            full_name = "__render_importMaterial-" + localRenderAsset["assetBundleHash"]
+            full_name = full_name[:59] # Superbe contrainte en dur, blender tronque les identifiants
+
     for obj in objects:
-        if obj.type != 'MESH': continue
+        if obj.type != 'MESH':
+            continue
 
         for slot in obj.material_slots:
-            if re.search(f'^{re.escape(matName)}(\.\d+)?$', slot.material.name) is not None:
-                principled = slot.material.node_tree.nodes['Principled BSDF']
-                principled.inputs['Base Color'].default_value = (colorToApply['r'],colorToApply['g'], colorToApply['b'], colorToApply['a'])
+            if re.search(f'^{re.escape(matName)}(\.\d+)?$', slot.material.name) is not None\
+                    or slot.material.name[:len(full_name)] == full_name[:len(full_name)]:
+                new_material = slot.material.copy()
+                tree = new_material.node_tree
+                principled = tree.nodes['Principled BSDF']
+                slot.material = new_material
+            else:
+                continue
+
+            base_color = principled.inputs['Base Color']
+            new_color = (colorToApply['r'], colorToApply['g'], colorToApply['b'], colorToApply['a'])
+
+            # On a à présent plusieurs cas de figure, si il s'agit d'une base color simple, s'il s'agit d'un color
+            # mix en source, ou alors d'une simple texture (cas le plus chiant)
+            if len(base_color.links) == 0:
+                # cas simple en gros, on a pas de lien complexe, c'est une couleur simple
+                base_color.default_value = new_color
+            else:
+                link = base_color.links[0]
+                if link.from_node.name == 'Mix':
+                    # Cas où on a un mixer de couleur
+                    mix = link.from_node
+                    mix.inputs['B'].default_value = new_color
+                else:
+                    if link.from_node.name == 'Image Texture':
+                        # cas où la couleur de base provient d'une texture, il faut insérer notre mix à la volée
+                        image_node = link.from_node
+                        new_node = tree.nodes.new('ShaderNodeMix')
+                        new_node.name = 'Mix'
+                        new_node.blend_type = 'MULTIPLY'
+                        new_node.data_type = 'RGBA'
+                        new_node.clamp_result = False
+                        new_node.clamp_factor = True
+                        new_node.inputs['B'].default_value = new_color
+                        new_node.inputs['Factor'].default_value = 1.0
+
+                        tree.links.new(new_node.outputs['Result'], link.to_node.inputs['Base Color'])
+                        tree.links.new(image_node.outputs['Color'], new_node.inputs['A'])
+
 
 
 def importMaterialRenderAsset(objects, matName, renderAssetRef):
@@ -187,7 +239,7 @@ for obj in bpy.context.scene.objects:
 
         if 'palettesMap' in obj:
             for (materialName, color) in obj['palettesMap'].items():
-                applyColorMaterial(appliedObjects, materialName, color)
+                applyColorMaterial(appliedObjects, materialName, color, obj['materialsMap'])
                 importedColorsCount += 1
 
 
