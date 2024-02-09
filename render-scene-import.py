@@ -18,6 +18,8 @@ argv = sys.argv
 sceneEnvironment = argv[argv.index('--scene-environment') + 1]
 isInterior = sceneEnvironment == 'interior'
 
+session = argv[argv.index('--session') + 1]
+
 ## Import the GLTF scene exported from mDC Designer
 
 sceneFilePath = path.join(path.dirname(bpy.data.filepath), 'myDecoCloud_scene', 'myDecoCloud_scene.gltf')
@@ -330,12 +332,13 @@ if "__render_sun" in bpy.data.objects:
     sceneSunRotation = sun.matrix_world.decompose()[1].to_euler().z
     hdrMapSunRotation = 0.86924
 
-    bpy.data.worlds["World"].node_tree.nodes["Mapping"].inputs[2].default_value[2] =  hdrMapSunRotation - sceneSunRotation
+    bpy.data.worlds["World"].node_tree.nodes["Mapping"].inputs[2].default_value[2] = hdrMapSunRotation - sceneSunRotation
 
 
 ## Set the active camera
 
 bpy.context.scene.camera = bpy.data.objects["__render_camera"]
+bpy.ops.wm.save_as_mainfile(filepath=f"./cache/scene-{sceneEnvironment}-{session}.blend")
 
 
 print(f'--- render-scene-import.py execution time: {time.time() - startTime} seconds ---')
