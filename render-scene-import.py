@@ -19,13 +19,11 @@ sceneEnvironment = argv[argv.index('--scene-environment') + 1]
 isInterior = sceneEnvironment == 'interior'
 
 session = argv[argv.index('--session') + 1]
-
 ## Import the GLTF scene exported from mDC Designer
 
 sceneFilePath = path.join(path.dirname(bpy.data.filepath), 'myDecoCloud_scene', 'myDecoCloud_scene.gltf')
 
 bpy.ops.import_scene.gltf(filepath=sceneFilePath)
-
 
 ## Import and place assets, potentially their high quality versions stored in .blend files
 
@@ -98,7 +96,12 @@ def importObjectRenderAsset(obj, renderAssetRef):
     ## Return the importedObject so that it can be used for material map
     return importedObject
 
-
+def srgb_to_linear(c):
+    if c <= 0.04045:
+        return c / 12.92
+    else:
+        return math.pow((c + 0.055) / 1.055, 2.4)
+    
 # Fonction de processing des matériaux.
 
 # Cette méthode sert à appliquer une palette, on est obligé de filer la materialMap car si c'était un matériaux
@@ -132,7 +135,7 @@ def applyColorMaterial(objects, matName, colorToApply, materialsMap):
                 continue
 
             base_color = principled.inputs['Base Color']
-            new_color = (colorToApply['r'], colorToApply['g'], colorToApply['b'], colorToApply['a'])
+            new_color = (srgb_to_linear(colorToApply['r']), srgb_to_linear(colorToApply['g']), srgb_to_linear(colorToApply['b']), colorToApply['a'])
 
             # On a à présent plusieurs cas de figure, si il s'agit d'une base color simple, s'il s'agit d'un color
             # mix en source, ou alors d'une simple texture (cas le plus chiant)
@@ -222,6 +225,13 @@ importedObjectsCount = 0
 importedMaterialsCount = 0
 importedColorsCount = 0
 
+# On commence par traiter l'herbe. On fait ça avant la substitution de matériaux car
+# cette dernière risque de faire disparaitre des informations
+
+for obj in bpy.context.scene.objects:
+    if obj.type != 'MESH': continue
+
+# On s'occupe de tous les modificateurs de matériaux
 for obj in bpy.context.scene.objects:
     importedObject = None
 
@@ -251,13 +261,23 @@ for mat in bpy.data.materials:
         importedMaterialsCount += 1
 
 
-## Replace windows glass materials
-
+## Replace windows glass materials and grass
 windowsGlassMaterial = bpy.data.materials["__render_MAT_Vitre"]
+grassNodeModifier = bpy.data.node_groups['ScatterGrassAndFlowers']
 
 for obj in bpy.context.scene.objects:
     if obj.type != 'MESH': continue
-        
+
+    # On process toutes les surfaces qui sont indiqués comme du jardin
+    # Puis on va vérifier que la texture appliquée à cette surface est bien
+    # une surface "herbeuse". Dans ce cas on va rajouter un modificateur de node
+    # qui génèrera la géométrie de l'herbe.
+    if 'shouldHaveGrass' in obj and obj['shouldHaveGrass'] == True:
+        print(f'Add grass modifier to {obj.name}')
+        modifier = obj.modifiers.new("Grass", "NODES")
+        modifier.node_group = grassNodeModifier
+
+    # Les vitres
     for slot in obj.material_slots:
         if slot.material.name.startswith('MAT_Vitre_01'):
             print(f'Replace {slot.material.name} material in {obj.name} to {windowsGlassMaterial.name}')
