@@ -272,10 +272,12 @@ for obj in bpy.context.scene.objects:
     # Puis on va vérifier que la texture appliquée à cette surface est bien
     # une surface "herbeuse". Dans ce cas on va rajouter un modificateur de node
     # qui génèrera la géométrie de l'herbe.
-    if 'shouldHaveGrass' in obj and obj['shouldHaveGrass'] == True:
-        print(f'Add grass modifier to {obj.name}')
-        modifier = obj.modifiers.new("Grass", "NODES")
-        modifier.node_group = grassNodeModifier
+    if 'grassGeneration' in obj:
+        match obj['grassGeneration']:
+            case 1:
+                print(f'Add grass modifier type 1 to {obj.name}')
+                modifier = obj.modifiers.new("Grass", "NODES")
+                modifier.node_group = grassNodeModifier
 
     # Les vitres
     for slot in obj.material_slots:
