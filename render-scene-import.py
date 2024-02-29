@@ -20,7 +20,6 @@ isInterior = sceneEnvironment == 'interior'
 
 session = argv[argv.index('--session') + 1]
 ## Import the GLTF scene exported from mDC Designer
-
 sceneFilePath = path.join(path.dirname(bpy.data.filepath), 'myDecoCloud_scene', 'myDecoCloud_scene.gltf')
 
 bpy.ops.import_scene.gltf(filepath=sceneFilePath)
@@ -263,7 +262,9 @@ for mat in bpy.data.materials:
 
 ## Replace windows glass materials and grass
 windowsGlassMaterial = bpy.data.materials["__render_MAT_Vitre"]
-grassNodeModifier = bpy.data.node_groups['ScatterGrassAndFlowers']
+
+if sceneEnvironment == "exterior":
+    grassNodeModifier = bpy.data.node_groups['ScatterGrassAndFlowers']
 
 for obj in bpy.context.scene.objects:
     if obj.type != 'MESH': continue
@@ -272,7 +273,7 @@ for obj in bpy.context.scene.objects:
     # Puis on va vérifier que la texture appliquée à cette surface est bien
     # une surface "herbeuse". Dans ce cas on va rajouter un modificateur de node
     # qui génèrera la géométrie de l'herbe.
-    if 'grassGeneration' in obj:
+    if 'grassGeneration' in obj and sceneEnvironment == 'exterior':
         match obj['grassGeneration']:
             case 1:
                 print(f'Add grass modifier type 1 to {obj.name}')
