@@ -4,6 +4,7 @@ Imports a GLTF file, joins all meshes, and saves the blend file at the same plac
 
 import bpy
 import sys
+import bmesh
 
 argv = sys.argv
 argv = argv[argv.index("--") + 1:] # get all args after "--"
@@ -25,6 +26,15 @@ joinedMesh = next(filter(lambda obj: obj.type == 'MESH', bpy.data.objects))
 with bpy.context.temp_override(active_object=joinedMesh, selected_objects=[joinedMesh]):
     bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
     bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+
+# Recompute the normals to account for the negative scale
+bm = bmesh.new()
+bm.from_mesh(joinedMesh.data)
+bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+bm.to_mesh(joinedMesh.data)
+bm.clear()
+joinedMesh.data.update()
+bm.free()
 
 # Delete all non-meshes objects
 nonMeshes = list(filter(lambda obj: obj.type != 'MESH', bpy.data.objects))
