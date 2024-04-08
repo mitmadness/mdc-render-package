@@ -15,6 +15,8 @@ from os import path
 startTime = time.time()
 
 argv = sys.argv
+
+#argv = ['--scene-environment', 'interior', '--position', '-1.570920,-0.760569,1', '--orientation', '1.570797,7.4503,-1.0471', '--camera', 'perspective,1.7777,1.09955,0.1,11.395', '--session', 'DEBUGGING']
 sceneEnvironment = argv[argv.index('--scene-environment') + 1]
 isInterior = sceneEnvironment == 'interior'
 positionArg = argv[argv.index('--position') + 1]
@@ -266,8 +268,8 @@ for mat in bpy.data.materials:
 ## Replace windows glass materials and grass
 windowsGlassMaterial = bpy.data.materials["__render_MAT_Vitre"]
 
-if sceneEnvironment == "exterior":
-    grassNodeModifier = bpy.data.node_groups['ScatterGrassAndFlowers']
+## on s'occupe de générer l'herbe
+grassNodeModifier = bpy.data.node_groups['ScatterGrassAndFlowers']
 
 for obj in bpy.context.scene.objects:
     if obj.type != 'MESH': continue
@@ -276,7 +278,7 @@ for obj in bpy.context.scene.objects:
     # Puis on va vérifier que la texture appliquée à cette surface est bien
     # une surface "herbeuse". Dans ce cas on va rajouter un modificateur de node
     # qui génèrera la géométrie de l'herbe.
-    if 'grassGeneration' in obj and sceneEnvironment == 'exterior':
+    if 'grassGeneration' in obj:
         match obj['grassGeneration']:
             case 1:
                 print(f'Add grass modifier type 1 to {obj.name}')
@@ -290,6 +292,11 @@ for obj in bpy.context.scene.objects:
             
             slot.material = windowsGlassMaterial
 
+## On s'occupe de corriger les sources de lumières
+for light_data in bpy.data.lights:
+    if light_data.users:
+        if light_data.type == 'POINT':
+                light_data.shadow_soft_size = 0.025
 
 ## Add light areas / portals to all openings
 
