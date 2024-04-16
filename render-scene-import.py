@@ -10,7 +10,9 @@ import mathutils
 import re
 import sys
 import time
+import numpy as np
 from os import path
+from mathutils import Matrix, Vector
 
 startTime = time.time()
 
@@ -107,6 +109,60 @@ def srgb_to_linear(c):
         return math.pow((c + 0.055) / 1.055, 2.4)
     
 # Fonction de processing des matériaux.
+
+# Cette méthode va s'occuper d'application la rotation custom d'un revêtement de sol
+def applyRotation(objects, rotation):
+    print(f'Apply rotation to', object.__name__)
+
+    pivot = Vector((0.5,0.5))
+    angle = math.radians(rotation)
+
+    for obj in objects:
+        uvlayer  = obj.data.uv_layers.active
+
+        p = 1 #obj.dimensions.y / obj.dimensions.x
+
+        R = Matrix((
+            (np.cos(angle), np.sin(angle) / p),
+            (-p * np.sin(angle), np.cos(angle))
+        ))
+
+        uvs = np.empty(2*len(obj.data.loops))
+        uvlayer.data.foreach_get("uv", uvs)
+
+        uvs = np.dot(uvs.reshape((-1,2)) - pivot, R) + pivot
+        uvlayer.data.foreach_set("uv", uvs.ravel())
+
+        obj.data.update()
+
+def applyOldRotation(objects, rotation):
+    print(f'Apply rotation to', object.__name__)
+
+    for obj in objects:
+        if obj.type != 'MESH':
+            continue
+
+        for slot in obj.material_slots:
+            new_material = slot.material.copy()
+            tree = new_material.node_tree
+            principled = tree.nodes['Principled BSDF']
+            slot.material = new_material
+
+            # on va créer les nouveaux noeuds
+            texture_map = tree.nodes.new('ShaderNodeTexCoord')
+            mapping = tree.nodes.new('ShaderNodeMapping')
+
+            mapping.inputs['Rotation'].default_value[2] = math.radians(rotation)
+
+            base_color = tree.nodes['Image Texture']
+            metallic = tree.nodes['Image Texture.001']
+            normal = tree.nodes['Image Texture.002']
+
+            tree.links.new(texture_map.outputs['Generated'], mapping.inputs['Vector'])
+            tree.links.new(mapping.outputs['Vector'], base_color.inputs['Vector'] )
+            tree.links.new(mapping.outputs['Vector'], metallic.inputs['Vector'])
+            tree.links.new(mapping.outputs['Vector'], normal.inputs['Vector'])
+
 
 # Cette méthode sert à appliquer une palette, on est obligé de filer la materialMap car si c'était un matériaux
 # customisable, il s'est fait importer la face dans un nom qui n'a plus rien à voir avec son nom original
@@ -291,6 +347,14 @@ for obj in bpy.context.scene.objects:
             print(f'Replace {slot.material.name} material in {obj.name} to {windowsGlassMaterial.name}')
             
             slot.material = windowsGlassMaterial
+
+# Traitement des rotations de surface
+for obj in bpy.context.scene.objects:
+    if 'rotation' in obj:
+        appliedObject = importedObject or obj
+        appliedObjects = [appliedObject, *appliedObject.children_recursive]
+
+        applyRotation(appliedObjects, obj['rotation'])
 
 ## On s'occupe de corriger les sources de lumières
 for light_data in bpy.data.lights:
