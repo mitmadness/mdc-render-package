@@ -115,7 +115,7 @@ def applyRotation(objects, rotation):
     print(f'Apply rotation to', object.__name__)
 
     pivot = Vector((0.5,0.5))
-    angle = math.radians(rotation)
+    angle = math.radians(-rotation)
 
     for obj in objects:
         uvlayer  = obj.data.uv_layers.active
