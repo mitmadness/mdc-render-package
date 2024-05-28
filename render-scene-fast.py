@@ -62,7 +62,7 @@ else:
     ymag = cameraValues[4]
 
     camera.data.type = 'ORTHO'
-    camera.data.magnification = xmag
+    camera.data.ortho_scale = xmag
 
 bpy.context.scene.camera = camera
 
