@@ -473,7 +473,7 @@ else:
     ymag = cameraValues[4]
 
     camera.data.type = 'ORTHO'
-    camera.data.ortho_scale = xmag
+    camera.data.ortho_scale = float(xmag)
 
 bpy.context.scene.camera = camera
 
