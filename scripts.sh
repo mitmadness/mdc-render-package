@@ -5,11 +5,17 @@ case $1 in
     "render-exterior")
         blender -b render-scene-exterior.blend --python render-scene-import.py -o //Result#### -x 1 -f 1 -- --cycles-device OPTIX --scene-environment exterior --session $2 --position $3 --orientation $4 --camera $5
         ;;
+    "render-nightly")
+        blender -b render-scene-nightly.blend --python render-scene-import.py -o //Result#### -x 1 -f 1 -- --cycles-device OPTIX --scene-environment nightly --session $2 --position $3 --orientation $4 --camera $5
+        ;;
     "render-fast-interior")
         blender -b cache/scene-interior-$2.blend --python render-scene-fast.py -o //Result#### -x 1 -f 1 -- --cycles-device OPTIX --scene-environment interior --session $2 --position $3 --orientation $4 --camera $5
         ;;
     "render-fast-exterior")
         blender -b cache/scene-exterior-$2.blend --python render-scene-fast.py -o //Result#### -x 1 -f 1 -- --cycles-device OPTIX --scene-environment exterior --session $2 --position $3 --orientation $4 --camera $5
+        ;;
+    "render-fast-nightly")
+        blender -b cache/scene-nightly-$2.blend --python render-scene-fast.py -o //Result#### -x 1 -f 1 -- --cycles-device OPTIX --scene-environment nightly --session $2 --position $3 --orientation $4 --camera $5
         ;;
     "prepare-material-hq-file")
         blender -b $2 --python prepare-material-hq-file.py

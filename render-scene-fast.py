@@ -16,6 +16,7 @@ startTime = time.time()
 argv = sys.argv
 sceneEnvironment = argv[argv.index('--scene-environment') + 1]
 isInterior = sceneEnvironment == 'interior'
+isNightly = sceneEnvironment == 'nightly'
 
 session = argv[argv.index('--session') + 1]
 positionArg = argv[argv.index('--position') + 1]

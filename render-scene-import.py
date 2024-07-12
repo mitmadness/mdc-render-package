@@ -21,6 +21,7 @@ argv = sys.argv
 #argv = ['--scene-environment', 'interior', '--position', '-1.570920,-0.760569,1', '--orientation', '1.570797,7.4503,-1.0471', '--camera', 'perspective,1.7777,1.09955,0.1,11.395', '--session', 'DEBUGGING']
 sceneEnvironment = argv[argv.index('--scene-environment') + 1]
 isInterior = sceneEnvironment == 'interior'
+isNightly = sceneEnvironment == 'nightly'
 positionArg = argv[argv.index('--position') + 1]
 orientationArg = argv[argv.index('--orientation') + 1]
 cameraArg = argv[argv.index('--camera') + 1]
@@ -372,7 +373,7 @@ for obj in bpy.context.scene.objects:
         
         lightData = bpy.data.lights.new(name='Area Light Data', type='AREA')
 
-        energyBase = 15 if isInterior else 2.5 # W / m^2
+        energyBase = 15 if isInterior else 0.1 if isNightly else 2.5 # W / m^2
         lightData.energy = energyBase * openingSizeX * openingSizeY
         
         lightData.shape = 'RECTANGLE'
