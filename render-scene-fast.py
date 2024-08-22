@@ -8,6 +8,7 @@ import re
 import sys
 import time
 from os import path
+from mathutils import Euler
 
 
 startTime = time.time()
@@ -22,12 +23,15 @@ session = argv[argv.index('--session') + 1]
 positionArg = argv[argv.index('--position') + 1]
 orientationArg = argv[argv.index('--orientation') + 1]
 cameraArg = argv[argv.index('--camera') + 1]
+sunOrientationArg = argv[argv.index('--sun-orientation') + 1]
 
 # Transforme le positionArgs en 3 flottant x y z
 positionValues = positionArg.split(",")
 positionX, positionY, positionZ = map(float, positionValues)
 orientationValues = orientationArg.split(",")
 orientationX, orientationY, orientationZ = map(float, orientationValues)
+sunOrientationValues = sunOrientationArg.split(",")
+sunOrientationX, sunOrientationY, sunOrientationZ = map(float, sunOrientationValues)
 
 cameraValues = cameraArg.split(",")
 cameraType = cameraValues[0]
@@ -69,5 +73,12 @@ else:
 
 bpy.context.scene.camera = camera
 
+# on change la position du soleil
+sun = bpy.data.objects["__render_sun"]
+sun.data.energy = 0
+sun.rotation_euler = Euler((sunOrientationX, sunOrientationY, sunOrientationZ), 'XYZ')
+sceneSunRotation = sunOrientationZ
+hdrMapSunRotation = 0.86924
 
+bpy.data.worlds["World"].node_tree.nodes["Mapping"].inputs[2].default_value[2] = hdrMapSunRotation - sceneSunRotation
 print(f'--- render-scene-fast-import.py execution time: {time.time() - startTime} seconds ---')
