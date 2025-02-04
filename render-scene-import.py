@@ -164,7 +164,6 @@ def applyOldRotation(objects, rotation):
             tree.links.new(mapping.outputs['Vector'], metallic.inputs['Vector'])
             tree.links.new(mapping.outputs['Vector'], normal.inputs['Vector'])
 
-
 # Cette méthode sert à appliquer une palette, on est obligé de filer la materialMap car si c'était un matériaux
 # customisable, il s'est fait importer la face dans un nom qui n'a plus rien à voir avec son nom original
 # du coup on doit pouvoir accéder au hash du bundle pour pouvoir retrouver le matériaux et le dupliquer.
@@ -228,14 +227,17 @@ def applyColorMaterial(objects, matName, colorToApply, materialsMap):
 
 
 def importMaterialRenderAsset(objects, matName, renderAssetRef):
-    print(f'Import material {matName} RenderAsset')
+    print(f'Import material asset {matName}')
     
     renderAssetFileName = renderAssetRef["assetBundleHash"]
+
+    hasCustomColor = 'customColor' in renderAssetRef
+    if hasCustomColor:
+        customColor = renderAssetRef["customColor"]
 
     ## Use a simple dict cache to see if we already imported this material
     if renderAssetFileName in importedMaterials:
         importedMaterial = importedMaterials[renderAssetFileName]
-    
     else:
         ## Import the HQ or LQ .blend scene
         hqFilePath = path.join(assetsPath, renderAssetFileName, f'{renderAssetFileName}-hq.blend')
@@ -262,18 +264,25 @@ def importMaterialRenderAsset(objects, matName, renderAssetRef):
         
         ## Get the imported object and change its name
         importedMaterial = bpy.data.materials['__render_importMaterial']
-
-        importedMaterial.name += '-' + renderAssetFileName
+        importedMaterial.name = matName
 
         ## Cache it
         importedMaterials[renderAssetFileName] = importedMaterial
 
+    # Si on a une custom color, on va dupliquer le matériaux et appliquer notre couleur.
+    if hasCustomColor:
+        importedMaterial = importedMaterial.copy()
+        applyCustomColorToMaterial(importedMaterial, customColor)
+
     # Replace the material in all slots of meshes
     for obj in objects:
         if obj.type != 'MESH': continue
-    
+
+        # On devient plus strict sur le remplacement des slots vu qu'à présent on a des variantes d'un même matériau
+        # on ne peut donc pas s'amuser à aller bourriner comme un sac tous les matériaux qui ont un nom similaire.
         for slot in obj.material_slots:
-            if re.search(f'^{re.escape(matName)}(\.\d+)?$', slot.material.name) is not None:
+            #if re.search(f'^{re.escape(matName)}(\.\d+)?$', slot.material.name) is not None:
+            if matName == slot.material.name:
                 slot.material = importedMaterial
 
     ## Delete the dummy that were used in the files to keep the material, if they exist
@@ -314,6 +323,43 @@ for obj in bpy.context.scene.objects:
             for (materialName, color) in obj['palettesMap'].items():
                 applyColorMaterial(appliedObjects, materialName, color, obj['materialsMap'])
                 importedColorsCount += 1
+
+def applyCustomColorToMaterial(material, colorToApply):
+    print(f'Apply custom color to {material.name}')
+
+    tree = material.node_tree
+    principled = tree.nodes['Principled BSDF']
+
+    base_color = principled.inputs['Base Color']
+    new_color = (srgb_to_linear(colorToApply['r']), srgb_to_linear(colorToApply['g']), srgb_to_linear(colorToApply['b']),
+                 colorToApply['a'])
+
+    # On a à présent plusieurs cas de figure, si il s'agit d'une base color simple, s'il s'agit d'un color
+    # mix en source, ou alors d'une simple texture (cas le plus chiant)
+    if len(base_color.links) == 0:
+        # cas simple en gros, on a pas de lien complexe, c'est une couleur simple
+        base_color.default_value = new_color
+    else:
+        link = base_color.links[0]
+        if link.from_node.name == 'Mix':
+            # Cas où on a un mixer de couleurx
+            mix = link.from_node
+            mix.inputs['B'].default_value = new_color
+        else:
+            if link.from_node.name == 'Image Texture':
+                # cas où la couleur de base provient d'une texture, il faut insérer notre mix à la volée
+                image_node = link.from_node
+                new_node = tree.nodes.new('ShaderNodeMix')
+                new_node.name = 'Mix'
+                new_node.blend_type = 'MULTIPLY'
+                new_node.data_type = 'RGBA'
+                new_node.clamp_result = False
+                new_node.clamp_factor = True
+                new_node.inputs['B'].default_value = new_color
+                new_node.inputs['Factor'].default_value = 1.0
+
+                tree.links.new(new_node.outputs['Result'], link.to_node.inputs['Base Color'])
+                tree.links.new(image_node.outputs['Color'], new_node.inputs['A'])
 
 
 for mat in bpy.data.materials:
