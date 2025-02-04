@@ -324,7 +324,7 @@ for obj in bpy.context.scene.objects:
         appliedObjects = [appliedObject, *appliedObject.children_recursive]
 
         for (materialName, renderAssetRef) in obj['materialsMap'].items():
-            importMaterialRenderAsset(appliedObjects, materialName, renderAssetRef, false)
+            importMaterialRenderAsset(appliedObjects, materialName, renderAssetRef, False)
             importedMaterialsCount += 1
 
         if 'palettesMap' in obj:
@@ -372,7 +372,7 @@ def applyCustomColorToMaterial(material, colorToApply):
 
 for mat in bpy.data.materials:
     if 'assetBundleHash' in mat:
-        importMaterialRenderAsset(bpy.context.scene.objects, mat.name, mat, true)
+        importMaterialRenderAsset(bpy.context.scene.objects, mat.name, mat, True)
         importedMaterialsCount += 1
 
 
