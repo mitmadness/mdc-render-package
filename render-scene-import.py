@@ -98,7 +98,10 @@ def importObjectRenderAsset(obj, renderAssetRef):
     ## Apply the weights of the blendshape
     if 'weights' in obj and isinstance(obj['weights'], idprop.types.IDPropertyArray):
         for weightIndex, weight in enumerate(obj['weights']):
-            importedObject.data.shape_keys.key_blocks[weightIndex + 1].value = weight
+            if importedObject.data.shape_keys is not None:
+                importedObject.data.shape_keys.key_blocks[weightIndex + 1].value = weight
+            else:
+                print(f'Weights on an object without shape keys ! {obj.name} -> {renderAssetFileName}')
 
     ## Return the importedObject so that it can be used for material map
     return importedObject
