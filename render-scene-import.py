@@ -385,6 +385,7 @@ frostedGlassMaterial = bpy.data.materials["__render_MAT_Frosted_Glass"]
 cathedralGlassMaterial = bpy.data.materials["__render_MAT_Cathedral_Glass"]
 microdotGlassMaterial = bpy.data.materials["__render_MAT_Microdot_Glass"]
 boxGlassMaterial = bpy.data.materials["__render_MAT_Boxed_Glass"]
+smokedGlassMaterial = bpy.data.materials["__render_MAT_Smoked_Glass"]
 
 ## on s'occupe de générer l'herbe
 grassNodeModifier = bpy.data.node_groups['ScatterGrassAndFlowers']
@@ -453,6 +454,10 @@ for obj in bpy.context.scene.objects:
         if slot.material.name.startswith('MAT_Vitre_05'):
             print(f'Replace {slot.material.name} material in {obj.name} to {boxGlassMaterial.name}')
             slot.material = boxGlassMaterial
+        if slot.material.name.startswith('MAT_Vitre_06'):
+            print(f'Replace {slot.material.name} material in {obj.name} to {smokedGlassMaterial.name}')
+            slot.material = smokedGlassMaterial
+
 
 # Traitement des rotations de surface
 for obj in bpy.context.scene.objects:
