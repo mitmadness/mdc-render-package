@@ -385,9 +385,30 @@ frostedGlassMaterial = bpy.data.materials["__render_MAT_Frosted_Glass"]
 cathedralGlassMaterial = bpy.data.materials["__render_MAT_Cathedral_Glass"]
 microdotGlassMaterial = bpy.data.materials["__render_MAT_Microdot_Glass"]
 boxGlassMaterial = bpy.data.materials["__render_MAT_Boxed_Glass"]
+smokedGlassMaterial = bpy.data.materials["__render_MAT_Smoked_Glass"]
 
 ## on s'occupe de générer l'herbe
 grassNodeModifier = bpy.data.node_groups['ScatterGrassAndFlowers']
+
+# On initialise notre tableau de truc qui vont couper les plans de gazon.
+cutters = []
+index_cutter = 0
+
+# On fait d'abord une passe pour récupérer toutes les dalles qui tuent la pelouse
+for obj in bpy.context.scene.objects:
+    if obj.type != 'MESH': continue
+
+    if 'grassDestruction' in obj and obj['grassDestruction']:
+        print("found one grass destruction object {}".format(obj.type))
+        cutters.append(obj)
+        obj.select_set(True)
+
+if len(cutters) > 0:
+    scene = bpy.context.scene
+    bpy.context.view_layer.objects.active = cutters[0]
+    #bpy.context.view_layer.objects.selected = cutters
+    bpy.ops.object.join()
+
 
 for obj in bpy.context.scene.objects:
     if obj.type != 'MESH': continue
@@ -399,9 +420,22 @@ for obj in bpy.context.scene.objects:
     if 'grassGeneration' in obj:
         match obj['grassGeneration']:
             case 1:
+                # A présent on va appliquer nos dalles tueuses de gazon
+                if len(cutters) > 0:
+                    name = 'CutOut_' + str(index_cutter)
+                    bool_mod = obj.modifiers.new(name=name, type='BOOLEAN')
+                    bool_mod.operation = 'DIFFERENCE'
+                    bool_mod.object = cutters[0]
+                    bool_mod.solver = 'FAST'
+
+                    print(f"Applying grass modifier type {obj.name} cutout {index_cutter}")
+                    index_cutter += 1
+
                 print(f'Add grass modifier type 1 to {obj.name}')
                 modifier = obj.modifiers.new("Grass", "NODES")
                 modifier.node_group = grassNodeModifier
+
+                bpy.context.view_layer.objects.active = obj
 
     # Les vitres
     for slot in obj.material_slots:
@@ -420,6 +454,10 @@ for obj in bpy.context.scene.objects:
         if slot.material.name.startswith('MAT_Vitre_05'):
             print(f'Replace {slot.material.name} material in {obj.name} to {boxGlassMaterial.name}')
             slot.material = boxGlassMaterial
+        if slot.material.name.startswith('MAT_Vitre_06'):
+            print(f'Replace {slot.material.name} material in {obj.name} to {smokedGlassMaterial.name}')
+            slot.material = smokedGlassMaterial
+
 
 # Traitement des rotations de surface
 for obj in bpy.context.scene.objects:
