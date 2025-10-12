@@ -564,7 +564,7 @@ bpy.ops.object.camera_add(location=(positionX, positionY, positionZ),
 camera = bpy.context.active_object
 
 # creation de la caméra en fonction du type
-if cameraType == 'perspective':
+if cameraType == 'pe':
     aspectRatio = cameraValues[1]
     fov = cameraValues[2]
     znear = cameraValues[3]
@@ -577,6 +577,36 @@ if cameraType == 'perspective':
     camera.data.clip_start = float(znear)
     camera.data.clip_end = float(zfar)
 
+elif cameraType == 'perspective':
+    # Supprime toutes les caméras existantes
+    bpy.ops.object.select_all(action='DESELECT')
+    bpy.ops.object.select_by_type(type='CAMERA')
+    bpy.ops.object.delete()
+
+    scene = bpy.context.scene
+    WIDTH, HEIGHT = 4096, 2048
+    SAMPLES=128
+
+    scene.render.engine = 'CYCLES'
+    scene.cycles.samples = SAMPLES
+    scene.cycles.feature_set = 'SUPPORTED' # utilise uniquement les fonctionnalités supportées et stables de Cycles
+
+    bpy.ops.object.camera_add(location=(positionX, positionY, positionZ),
+                              rotation=(orientationX, orientationY, orientationZ))
+    camera = bpy.context.active_object
+
+    scene.camera = camera
+    camera.data.type = 'PANO'
+
+    try:
+        camera.data.cycles.panorama_type = 'EQUIRECTANGULAR'
+    except AttributeError:
+        if hasattr(camera.data, "panorama_type"):
+            camera.data.panorama_type = 'EQUIRECTANGULAR'
+
+    scene.render.resolution_x = WIDTH
+    scene.render.resolution_y = HEIGHT
+    scene.render.resolution_percentage = 100
 else:
     znear = cameraValues[1]
     zfar = cameraValues[2]
@@ -585,8 +615,7 @@ else:
 
     camera.data.type = 'ORTHO'
     camera.data.ortho_scale = float(xmag)
-
-bpy.context.scene.camera = camera
+    bpy.context.scene.camera = camera
 
 bpy.ops.wm.save_as_mainfile(filepath=f"./cache/scene-{sceneEnvironment}-{session}.blend")
 
