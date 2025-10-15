@@ -66,7 +66,7 @@ elif cameraType == 'perspective':
     bpy.ops.object.delete()
 
     scene = bpy.context.scene
-    WIDTH, HEIGHT = 4096, 2048
+    WIDTH, HEIGHT = 8192, 4096
     SAMPLES = 128
 
     scene.render.engine = 'CYCLES'
