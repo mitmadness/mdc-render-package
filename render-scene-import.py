@@ -563,8 +563,10 @@ bpy.ops.object.camera_add(location=(positionX, positionY, positionZ),
 
 camera = bpy.context.active_object
 
+print(f'Creating camera of {cameraType}')
+
 # creation de la caméra en fonction du type
-if cameraType == 'pe':
+if cameraType == 'perspective':
     aspectRatio = cameraValues[1]
     fov = cameraValues[2]
     znear = cameraValues[3]
@@ -576,21 +578,20 @@ if cameraType == 'pe':
     camera.data.angle = float(fov)
     camera.data.clip_start = float(znear)
     camera.data.clip_end = float(zfar)
-
-elif cameraType == 'perspective':
+    bpy.context.scene.camera = camera
+elif cameraType == 'panoramic':
     # Supprime toutes les caméras existantes
     bpy.ops.object.select_all(action='DESELECT')
     bpy.ops.object.select_by_type(type='CAMERA')
     bpy.ops.object.delete()
 
     scene = bpy.context.scene
-    WIDTH, HEIGHT = 8192, 4096
+    #WIDTH, HEIGHT = 8192, 4096
+    WIDTH, HEIGHT = 800, 400
     SAMPLES=128
 
     scene.render.engine = 'CYCLES'
     scene.cycles.samples = SAMPLES
-    scene.cycles.feature_set = 'SUPPORTED' # utilise uniquement les fonctionnalités supportées et stables de Cycles
-
     bpy.ops.object.camera_add(location=(positionX, positionY, positionZ),
                               rotation=(orientationX, orientationY, orientationZ))
     camera = bpy.context.active_object
