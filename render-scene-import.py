@@ -483,7 +483,7 @@ for obj in bpy.context.scene.objects:
         
         lightData = bpy.data.lights.new(name='Area Light Data', type='AREA')
 
-        energyBase = 15 if isInterior else 0.1 if isNightly else 0.1 # W / m^2
+        energyBase = 25 if isInterior else 0.1 if isNightly else 0.1 # W / m^2
         lightData.energy = energyBase * openingSizeX * openingSizeY
         
         lightData.shape = 'RECTANGLE'
